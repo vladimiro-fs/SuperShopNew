@@ -1,0 +1,71 @@
+﻿namespace SuperShopNew.Data
+{
+    using System;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Identity;
+    using SuperShopNew.Data.Entities;
+    using SuperShopNew.Helpers;
+
+    public class SeedDb
+    {
+        private readonly DataContext _context;
+        private readonly IUserHelper _userHelper;
+        private readonly Random _random;
+
+        public SeedDb(DataContext context, IUserHelper userHelper)
+        {
+            _context = context;
+            _userHelper = userHelper;
+            _random = new Random();
+        }
+
+        public async Task SeedAsync() 
+        {
+            await _context.Database.EnsureCreatedAsync();
+
+            var user = await _userHelper.GetUserByEmailAsync("rafaasfs@gmail.com");
+
+            if (user == null) 
+            {
+                user = new User
+                {
+                    FirstName = "Rafael",
+                    LastName = "Santos",
+                    Email = "rafaasfs@gmail.com",
+                    UserName = "rafaasfs@gmail.com",
+                    PhoneNumber = "216678264",
+                };
+
+                var result = await _userHelper.AddUserAsync(user, "123456");
+
+                if (result != IdentityResult.Success) 
+                {
+                    throw new InvalidOperationException("Couldn't create user in seeder");
+                }
+            }
+
+            if (!_context.Products.Any()) 
+            {
+                AddProduct("iPhoneX", user);
+                AddProduct("MickeyMouser", user);
+                AddProduct("iWatchSeries 4", user);
+                AddProduct("iPadMini", user);
+
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private void AddProduct(string name, User user)
+        {
+            _context.Products.Add(new Product
+            {
+                Name = name,
+                Price = _random.Next(1000),
+                IsAvailable = true,
+                Stock = _random.Next(100),
+                User = user,
+            });
+        }
+    }
+}

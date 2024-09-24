@@ -1,0 +1,23 @@
+﻿@model SuperShopNew.Data.Entities.Product
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Product Details</h1>
+
+<div>
+    <hr />
+    <div class="row">
+
+        <partial name="_ProductDetails" />
+
+        <div class="col-md-4">
+            <img src="@Model.ImageFullPath" alt="Image" style="width:300px;height:450px;max-width:100%;height:auto">
+        </div>
+    </div>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+    <a asp-action="Index" class="btn btn-success">Back to List</a>
+</div>
