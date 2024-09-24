@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Identity;
+    using Microsoft.EntityFrameworkCore;
     using SuperShopNew.Data.Entities;
     using SuperShopNew.Helpers;
 
@@ -22,7 +23,10 @@
 
         public async Task SeedAsync() 
         {
-            await _context.Database.EnsureCreatedAsync();
+            await _context.Database.MigrateAsync();
+
+            await _userHelper.CheckRoleAsync("Admin");
+            await _userHelper.CheckRoleAsync("Customer");
 
             var user = await _userHelper.GetUserByEmailAsync("rafaasfs@gmail.com");
 
@@ -43,6 +47,15 @@
                 {
                     throw new InvalidOperationException("Couldn't create user in seeder");
                 }
+
+                await _userHelper.AddUserToRoleAsync(user, "Admin");
+            }
+
+            var isInRole = await _userHelper.IsUserInRoleAsync(user, "Admin");
+
+            if (!isInRole) 
+            {
+                await _userHelper.AddUserToRoleAsync(user, "Admin");
             }
 
             if (!_context.Products.Any()) 

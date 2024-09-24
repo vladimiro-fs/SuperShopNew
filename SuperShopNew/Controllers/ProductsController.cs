@@ -3,6 +3,7 @@
     using System;
     using System.Linq;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using SuperShopNew.Data;
@@ -34,19 +35,20 @@
         {
             if (id == null)
             {
-                return NotFound();
+                return new NotFoundViewResult("ProductNotFound");
             }
 
             var product = await _productRepository.GetByIdAsync(id.Value);
 
             if (product == null)
             {
-                return NotFound();
+                return new NotFoundViewResult("ProductNotFound");
             }
 
             return View(product);
         }
 
+        [Authorize]
         public IActionResult Create()
         {
             return View();
@@ -67,7 +69,7 @@
 
                 var product = _converterHelper.ToProduct(model, imageId, true);
 
-                product.User = await _userHelper.GetUserByEmailAsync("rafaasfs@gmail.com");
+                product.User = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name);
 
                 await _productRepository.CreateAsync(product);
 
@@ -77,18 +79,19 @@
             return View(model);
         }
 
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
-                return NotFound();
+                return new NotFoundViewResult("ProductNotFound");
             }
 
             var product = await _productRepository.GetByIdAsync(id.Value);
 
             if (product == null)
             {
-                return NotFound();
+                return new NotFoundViewResult("ProductNotFound");
             }
 
             var model = _converterHelper.ToProductViewModel(product);
@@ -113,7 +116,7 @@
 
                     var product = _converterHelper.ToProduct(model, imageId, false);
 
-                    product.User = await _userHelper.GetUserByEmailAsync("rafaasfs@gmail.com");
+                    product.User = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name);
 
                     await _productRepository.UpdateAsync(product);
                 }
@@ -121,7 +124,7 @@
                 {
                     if (! await _productRepository.ExistsAsync(model.Id))
                     {
-                        return NotFound();
+                        return new NotFoundViewResult("ProductNotFound");
                     }
                     else
                     {
@@ -135,18 +138,19 @@
             return View(model);
         }
 
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
             {
-                return NotFound();
+                return new NotFoundViewResult("ProductNotFound");
             }
 
             var product = await _productRepository.GetByIdAsync(id.Value);
 
             if (product == null)
             {
-                return NotFound();
+                return new NotFoundViewResult("ProductNotFound");
             }
 
             return View(product);
@@ -161,6 +165,11 @@
             await _productRepository.DeleteAsync(product);
           
             return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult ProductNotFound() 
+        { 
+            return View();
         }
     }
 }
