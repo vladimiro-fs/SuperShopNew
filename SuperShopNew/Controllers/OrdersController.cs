@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using SuperShopNew.Data;
-using SuperShopNew.Models;
-using System.Threading.Tasks;
-
-namespace SuperShopNew.Controllers
+﻿namespace SuperShopNew.Controllers
 {
+    using System;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Mvc;
+    using SuperShopNew.Data;
+    using SuperShopNew.Models;
+
     [Authorize]
     public class OrdersController : Controller
     {
@@ -41,6 +42,103 @@ namespace SuperShopNew.Controllers
             }; 
             
             return View(model);  
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddProduct(AddItemViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                await _orderRepository.AddItemToOrderAsync(model, this.User.Identity.Name);
+
+                return RedirectToAction("Create");
+            }
+
+            return View(model);
+        }
+
+        public async Task<IActionResult> DeleteItem(int? id) 
+        {
+            if (id == null) 
+            {
+                return NotFound();
+            }
+
+            await _orderRepository.DeleteDetailTempAsync(id.Value);
+
+            return RedirectToAction("Create");
+        }
+
+        public async Task<IActionResult> Increase(int? id) 
+        {
+            if (id == null) 
+            {
+                return NotFound();
+            }
+
+            await _orderRepository.ModifyOrderDetailTempQuantityAsync(id.Value, 1);
+
+            return RedirectToAction("Create");
+        }
+
+        public async Task<IActionResult> Decrease(int? id) 
+        {
+            if (id == null) 
+            {
+                return NotFound();
+            }
+
+            await _orderRepository.ModifyOrderDetailTempQuantityAsync(id.Value, -1);
+
+            return RedirectToAction("Create");
+        }
+
+        public async Task<IActionResult> ConfirmOrder() 
+        { 
+            var response = await _orderRepository.ConfirmOrderAsync(this.User.Identity.Name);
+
+            if (response) 
+            {
+                return RedirectToAction("Index");
+            }
+
+            return RedirectToAction("Create");
+        }
+
+        public async Task<IActionResult> Deliver(int? id) 
+        { 
+            if (id == null) 
+            { 
+                return NotFound(); 
+            }
+
+            var order = await _orderRepository.GetOrderAsync(id.Value);
+
+            if (order == null) 
+            {
+                return NotFound();
+            }
+
+            var model = new DeliveryViewModel
+            {
+                Id = order.Id,
+                DeliveryDate = DateTime.Now,
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Deliver(DeliveryViewModel model) 
+        {
+            if (!ModelState.IsValid) 
+            { 
+                await _orderRepository.DeliverOrder(model);
+
+                return RedirectToAction("Index");
+            }
+
+            return View();
         }
     }
 }
